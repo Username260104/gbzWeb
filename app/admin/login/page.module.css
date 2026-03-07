@@ -1,0 +1,95 @@
+/* ── 관리자 로그인 페이지 스타일 ── */
+
+.main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    background: linear-gradient(160deg,
+            var(--color-secondary) 0%,
+            var(--color-secondary-light) 40%,
+            #2D2B55 100%);
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-4);
+}
+
+.main::before {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -15%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle,
+            var(--color-primary-glow) 0%,
+            transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+    z-index: 1;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-10) var(--space-8);
+    box-shadow: var(--shadow-xl);
+    animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.logo {
+    font-size: 3rem;
+    margin-bottom: var(--space-3);
+}
+
+.title {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--color-secondary);
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-1);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+.error {
+    font-size: var(--text-sm);
+    color: var(--color-error);
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    text-align: center;
+}
+
+.submitBtn {
+    width: 100%;
+    margin-top: var(--space-2);
+}

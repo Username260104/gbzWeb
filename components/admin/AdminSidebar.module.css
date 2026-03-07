@@ -1,0 +1,199 @@
+/* ── 관리자 사이드바 스타일 ── */
+
+.sidebar {
+    width: 260px;
+    min-height: 100dvh;
+    background: var(--color-secondary);
+    color: var(--color-text-inverse);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6) 0;
+    transition: transform var(--transition-base);
+    flex-shrink: 0;
+}
+
+/* 브랜드 */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.brandIcon {
+    font-size: 1.75rem;
+}
+
+.brandText {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--color-primary), #FF9F6B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 네비게이션 */
+.nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0 var(--space-3);
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.navItem:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.navItem.active {
+    color: var(--color-text-inverse);
+    background: rgba(255, 107, 53, 0.2);
+}
+
+.navIcon {
+    font-size: 1.1rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+/* 하단: 사용자 정보 */
+.footer {
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), #FF9F6B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: white;
+    flex-shrink: 0;
+}
+
+.userEmail {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logoutBtn {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: var(--text-xs) !important;
+    justify-content: flex-start;
+}
+
+.logoutBtn:hover {
+    color: var(--color-error) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* 모바일 토글 */
+.mobileToggle {
+    display: none;
+    position: fixed;
+    top: var(--space-4);
+    left: var(--space-4);
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-secondary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.hamburger {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--color-text-inverse);
+    position: relative;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-text-inverse);
+}
+
+.hamburger::before {
+    top: -6px;
+}
+
+.hamburger::after {
+    top: 6px;
+}
+
+.overlay {
+    display: none;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 767px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .mobileToggle {
+        display: flex;
+    }
+
+    .overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 40;
+    }
+}

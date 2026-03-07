@@ -1,0 +1,22 @@
+/* ── 관리자 대시보드 레이아웃 ── */
+
+.wrapper {
+    display: flex;
+    min-height: 100dvh;
+    background: var(--color-bg);
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-6) var(--space-8);
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* 모바일: 사이드바 오버레이 모드 → main이 전체 영역 */
+@media (max-width: 767px) {
+    .main {
+        padding: var(--space-4);
+        padding-top: calc(var(--space-16) + var(--space-2));
+    }
+}

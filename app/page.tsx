@@ -1,8 +1,14 @@
 import Link from 'next/link';
+import localFont from 'next/font/local';
 import styles from './page.module.css';
 import { createClient } from '@/lib/supabase/server';
 import { EVENT_STATUS } from '@/lib/constants';
 import { formatDateKR } from '@/lib/utils';
+
+const ribsans = localFont({
+  src: '../font/Ribsans.otf',
+  display: 'swap',
+});
 
 /**
  * 루트 페이지 — 활성 러닝 이벤트 노출
@@ -21,7 +27,7 @@ export default async function Home() {
 
   return (
     <main className={styles.main}>
-      <div className={styles.hero}>
+      <div className={`${styles.hero} ${ribsans.className}`}>
         <div className={styles.logoMark}>🏃</div>
         <h1 className={styles.title}>
           <span className={styles.titleAccent}>GBZ</span>

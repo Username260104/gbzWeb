@@ -5,10 +5,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
-  background: linear-gradient(160deg,
-      var(--color-secondary) 0%,
-      var(--color-secondary-light) 40%,
-      #2D2B55 100%);
+  background: #1a1a1a;
   position: relative;
   overflow: hidden;
 }
@@ -32,6 +29,7 @@
   text-align: center;
   animation: fadeIn var(--transition-slow) ease-out;
   padding: var(--space-8);
+  color: #fff;
 }
 
 .logoMark {
@@ -41,24 +39,24 @@
 }
 
 .title {
-  font-size: var(--text-4xl);
+  font-size: 3.4rem;
   font-weight: var(--font-bold);
-  color: var(--color-text-inverse);
+  color: #fff;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .titleAccent {
-  background: linear-gradient(135deg, var(--color-primary), #FF9F6B);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: inline-block;
+  font-size: 5.2rem;
+  color: #fff;
+  line-height: 1;
 }
 
 .subtitle {
   margin-top: var(--space-4);
   font-size: var(--text-lg);
-  color: var(--color-text-muted);
+  color: #fff;
   font-weight: var(--font-normal);
 }
 
@@ -76,23 +74,23 @@
   display: inline-block;
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
-  color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.9);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-full);
   padding: 6px 10px;
   margin-bottom: var(--space-3);
 }
 
 .activeEventTitle {
-  color: var(--color-text-inverse);
-  font-size: var(--text-xl);
+  color: #fff;
+  font-size: 1.7rem;
   margin-bottom: var(--space-2);
   line-height: 1.35;
 }
 
 .activeEventMeta {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: var(--text-sm);
+  color: #fff;
+  font-size: var(--text-base);
   margin-top: var(--space-1);
 }
 
@@ -100,9 +98,9 @@
   display: inline-block;
   margin-top: var(--space-4);
   text-decoration: none;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: var(--font-semibold);
-  color: var(--color-text-inverse);
+  color: #fff;
   background: var(--color-primary);
   padding: 10px 16px;
   border-radius: var(--radius-full);
@@ -115,11 +113,11 @@
 
 @media (min-width: 768px) {
   .title {
-    font-size: 3.5rem;
+    font-size: 4.8rem;
   }
 
-  .logoMark {
-    font-size: 5rem;
+  .titleAccent {
+    font-size: 7rem;
   }
 }
 
@@ -129,7 +127,7 @@
 
 .adminLink {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: #fff;
   text-decoration: none;
   opacity: 0.6;
   transition: opacity var(--transition-base), color var(--transition-base);
@@ -140,7 +138,7 @@
 
 .adminLink:hover {
   opacity: 1;
-  color: var(--color-text-inverse);
+  color: #fff;
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
 }

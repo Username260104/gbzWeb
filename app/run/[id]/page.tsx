@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import GuestForm from '@/components/run/GuestForm';
-import { EVENT_STATUS } from '@/lib/constants';
+import { EVENT_STATUS, REGISTRATION_STATUS } from '@/lib/constants';
 import { formatDateKR } from '@/lib/utils';
 import { getTemplateByType } from '@/lib/event-templates';
 
@@ -22,6 +22,12 @@ export default async function RunPage({ params }: RunPageProps) {
         .single();
 
     if (error || !event) notFound();
+
+    const { count: activeRegistrantCount } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event.id)
+        .neq('status', REGISTRATION_STATUS.CANCELLED);
 
     // 마감 또는 비공개 상태
     if (event.status !== EVENT_STATUS.OPEN) {
@@ -103,16 +109,11 @@ export default async function RunPage({ params }: RunPageProps) {
                             gap: 'var(--space-2)',
                             fontSize: 'var(--text-sm)',
                             color: 'rgba(255,255,255,0.7)',
+                            textAlign: 'left',
                         }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 'var(--space-2)',
-                            }}>
-                                <span>🗓️</span>
-                                <span>{formatDateKR(event.date)}</span>
-                            </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '6px var(--space-2)' }}>
+                                <span>🗓️ 일시</span>
+                                <span>{formatDateKR(event.date)}</span>
                                 <span>📌 유형</span>
                                 <span>{getTemplateByType(event.template_type || '')?.badgeLabel ?? '일반 이벤트'}</span>
                                 <span>📍 집결지</span>
@@ -121,10 +122,10 @@ export default async function RunPage({ params }: RunPageProps) {
                                 <span>{event.course || '미정'}</span>
                                 <span>📏 거리</span>
                                 <span>{event.distance_km ? `${event.distance_km}km` : '미정'}</span>
-                                <span>☕ 뒷풀이</span>
+                                <span>☕ 기타 사항</span>
                                 <span>{event.after_activity || '없음'}</span>
                                 <span>👥 정원</span>
-                                <span>{event.capacity > 0 ? `${event.capacity}명` : '무제한'}</span>
+                                <span>{event.capacity > 0 ? `${activeRegistrantCount ?? 0} / ${event.capacity}` : `${activeRegistrantCount ?? 0} / 무제한`}</span>
                             </div>
                         </div>
                     </div>

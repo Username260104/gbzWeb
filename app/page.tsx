@@ -2,7 +2,7 @@ import Link from 'next/link';
 import localFont from 'next/font/local';
 import styles from './page.module.css';
 import { createClient } from '@/lib/supabase/server';
-import { EVENT_STATUS } from '@/lib/constants';
+import { EVENT_STATUS, REGISTRATION_STATUS } from '@/lib/constants';
 import { formatDateKR } from '@/lib/utils';
 
 const ribsans = localFont({
@@ -25,6 +25,17 @@ export default async function Home() {
     .limit(1)
     .maybeSingle();
 
+  let activeRegistrantCount = 0;
+  if (activeEvent) {
+    const { count } = await supabase
+      .from('registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', activeEvent.id)
+      .neq('status', REGISTRATION_STATUS.CANCELLED);
+
+    activeRegistrantCount = count ?? 0;
+  }
+
   return (
     <main className={styles.main}>
       <div className={`${styles.hero} ${ribsans.className}`}>
@@ -44,7 +55,9 @@ export default async function Home() {
               <p className={styles.activeEventMeta}>{activeEvent.distance_km ? `${activeEvent.distance_km}km` : '미정'}</p>
               <p className={styles.activeEventMeta}>{activeEvent.course || '미정'}</p>
               <p className={styles.activeEventMeta}>{activeEvent.after_activity || '없음'}</p>
-              <p className={styles.activeEventMeta}>{activeEvent.capacity > 0 ? `${activeEvent.capacity}명` : '무제한'}</p>
+              <p className={styles.activeEventMeta}>
+                {activeEvent.capacity > 0 ? `${activeRegistrantCount} / ${activeEvent.capacity}` : `${activeRegistrantCount} / 무제한`}
+              </p>
             </div>
             <Link href={`/run/${activeEvent.id}`} className={styles.applyLink}>
               신청하러 가기

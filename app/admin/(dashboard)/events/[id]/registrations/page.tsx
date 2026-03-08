@@ -6,6 +6,8 @@ import Link from 'next/link';
 export const metadata = {
     title: '참가자 명단 | GBZ Web Service',
 };
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function EventRegistrationsPage({
     params,
@@ -62,8 +64,6 @@ export default async function EventRegistrationsPage({
 
     // 확정자 수 계산
     const confirmedCount = registrations?.filter(r => r.status === 'confirmed').length || 0;
-
-    console.log(JSON.stringify(registrations, null, 2));
 
     return (
         <div style={{ maxWidth: 'var(--max-width-xl)', margin: '0 auto', width: '100%' }}>

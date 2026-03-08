@@ -31,7 +31,7 @@ export default async function GuestsPage() {
         <div className={styles.container}>
             <div className={styles.header}>
                 <h1 className={styles.title}>게스트 이력</h1>
-                <p className={styles.subtitle}>게스트 참가 이력과 단골 목록을 조회합니다</p>
+                <p className={styles.subtitle}>게스트 참가 이력을 조회합니다</p>
             </div>
 
             <GuestList initialGuests={guests || []} />

@@ -12,7 +12,7 @@ export default function NewEventPage() {
                     이벤트 생성
                 </h1>
                 <p style={{ color: 'var(--color-text-secondary)' }}>
-                    새로운 러닝 이벤트를 추가합니다. 템플릿을 선택하면 기본값이 자동 채워집니다.
+                    새로운 러닝 이벤트를 추가합니다.
                 </p>
             </div>
 

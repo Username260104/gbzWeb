@@ -31,7 +31,7 @@ export default async function Home() {
         <h1 className={styles.title}>
           <span className={styles.titleAccent}>GBZ</span>
           <br />
-          Running Crew
+          Running Tribe
         </h1>
 
         {activeEvent && (
@@ -51,7 +51,7 @@ export default async function Home() {
 
         <footer className={styles.footer}>
           <Link href="/admin/login" className={styles.adminLink}>
-            관리자 로그인
+            *
           </Link>
         </footer>
       </div>

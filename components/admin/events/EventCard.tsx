@@ -33,11 +33,11 @@ export default function EventCard({ event }: { event: EventData }) {
     // 템플릿별 표시
     const getTemplateLabel = (type: string) => {
         switch (type) {
-            case TEMPLATE_TYPE.REGULAR: return '🏃 정기런';
-            case TEMPLATE_TYPE.SPEED: return '⚡ 스피드 세션';
-            case TEMPLATE_TYPE.COLLAB: return '🤝 외부 협업';
-            case TEMPLATE_TYPE.RACE: return '🏆 레이스 참가';
-            default: return '📍 일반 이벤트';
+            case TEMPLATE_TYPE.REGULAR: return '정기런';
+            case TEMPLATE_TYPE.SPEED: return '스피드 세션';
+            case TEMPLATE_TYPE.COLLAB: return '외부 협업';
+            case TEMPLATE_TYPE.RACE: return '레이스 참가';
+            default: return '일반 이벤트';
         }
     };
 

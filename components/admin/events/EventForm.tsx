@@ -190,7 +190,7 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
                         className="input"
                         value={formData.title}
                         onChange={handleChange}
-                        placeholder="예: 서울숲 토요 정기런"
+                        placeholder="이벤트명 입력"
                         required
                     />
                 </div>
@@ -231,7 +231,7 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
                         className="input"
                         value={formData.location}
                         onChange={handleChange}
-                        placeholder="예: 서울숲 군마상 앞"
+                        placeholder="집결지 입력"
                         required
                     />
                 </div>
@@ -279,7 +279,7 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
                         className="input"
                         value={formData.course}
                         onChange={handleChange}
-                        placeholder="예: 서울숲 2바퀴"
+                        placeholder="코스 설명 입력"
                         rows={2}
                     />
                 </div>
@@ -293,7 +293,7 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
                         className="input"
                         value={formData.after_activity}
                         onChange={handleChange}
-                        placeholder="예: 뒷풀이 국밥집"
+                        placeholder="애프터 활동 입력"
                     />
                 </div>
 

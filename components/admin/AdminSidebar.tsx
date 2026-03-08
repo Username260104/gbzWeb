@@ -57,7 +57,7 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
             <aside className={cn(styles.sidebar, mobileOpen && styles.open)}>
                 {/* 로고 */}
                 <div className={styles.brand}>
-                    <span className={styles.brandIcon}>🏃</span>
+                    <span className={styles.brandIcon}></span>
                     <span className={styles.brandText}>GBZ</span>
                 </div>
 

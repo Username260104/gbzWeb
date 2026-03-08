@@ -84,7 +84,7 @@ export async function POST(request: Request) {
                 return apiError(API_ERROR_MSG.DUPLICATE_REGISTRATION, HTTP_STATUS.CONFLICT);
             }
             // 트리거 정원 초과 예외 처리
-            if (regError.message && regError.message.includes('capacity')) {
+            if (regError.message && (regError.message.includes('capacity') || regError.message.includes('EVENT_FULL'))) {
                 return apiError(API_ERROR_MSG.CAPACITY_FULL, HTTP_STATUS.BAD_REQUEST);
             }
 

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         const { eventId, name, phone, course, pace, consentGiven } = body;
 
         // 필수 필드 검사
-        if (!eventId || !name || !phone || !course || !pace || !consentGiven) {
+        if (!eventId || !name || !phone || !pace || !consentGiven) {
             return apiError(API_ERROR_MSG.MISSING_PARAMS, HTTP_STATUS.BAD_REQUEST);
         }
 
@@ -27,6 +27,25 @@ export async function POST(request: Request) {
         // SPEC에 익명 사용자의 읽기가 제한된다고 되어 있으므로, 신청 과정은 시스템 권한으로 처리.
         // 이부분은 환경변수 설정과 연계되어야 함을 유의.
         const supabase = createAdminClient();
+
+        // 0. 코스 보정
+        // - 신청 폼에서 코스 입력을 제거했으므로, 이벤트 기본 코스를 우선 사용한다.
+        // - 이벤트 코스도 비어있으면 DB NOT NULL 제약을 만족하도록 기본값을 사용한다.
+        let resolvedCourse = typeof course === 'string' && course.trim() ? course.trim() : '';
+        if (!resolvedCourse) {
+            const { data: eventData, error: eventError } = await supabase
+                .from('events')
+                .select('course')
+                .eq('id', eventId)
+                .single();
+
+            if (eventError) {
+                handleApiError(eventError, 'Registration API - Event Course Fetch');
+                return apiError(API_ERROR_MSG.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+            }
+
+            resolvedCourse = eventData?.course?.trim() || '미정';
+        }
 
         // 1. guests 테이블 Upsert (전화번호 기준)
         const { data: guestData, error: guestError } = await supabase
@@ -51,7 +70,7 @@ export async function POST(request: Request) {
             .insert({
                 event_id: eventId,
                 guest_id: guestId,
-                course,
+                course: resolvedCourse,
                 pace,
                 status: REGISTRATION_STATUS.PENDING, // 기본 상태
                 consent_given: consentGiven,

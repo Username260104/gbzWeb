@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import GuestForm from '@/components/run/GuestForm';
 import { EVENT_STATUS } from '@/lib/constants';
 import { formatDateKR } from '@/lib/utils';
+import { getTemplateByType } from '@/lib/event-templates';
 
 interface RunPageProps {
     params: {
@@ -16,7 +17,7 @@ export default async function RunPage({ params }: RunPageProps) {
 
     const { data: event, error } = await supabase
         .from('events')
-        .select('id, title, date, status, capacity')
+        .select('id, title, date, location, course, distance_km, after_activity, template_type, status, capacity')
         .eq('id', params.id)
         .single();
 
@@ -98,28 +99,34 @@ export default async function RunPage({ params }: RunPageProps) {
                             {event.title}
                         </h1>
                         <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
+                            display: 'grid',
                             gap: 'var(--space-2)',
                             fontSize: 'var(--text-sm)',
                             color: 'rgba(255,255,255,0.7)',
                         }}>
-                            <span>🗓️</span>
-                            <span>{formatDateKR(event.date)}</span>
-                        </div>
-                        {event.capacity > 0 && (
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 'var(--space-2)',
-                                fontSize: 'var(--text-sm)',
-                                color: 'rgba(255,255,255,0.7)',
-                                marginTop: 'var(--space-1)',
                             }}>
-                                <span>👥</span>
-                                <span>정원 {event.capacity}명</span>
+                                <span>🗓️</span>
+                                <span>{formatDateKR(event.date)}</span>
                             </div>
-                        )}
+                            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '6px var(--space-2)' }}>
+                                <span>📌 유형</span>
+                                <span>{getTemplateByType(event.template_type || '')?.badgeLabel ?? '일반 이벤트'}</span>
+                                <span>📍 집결지</span>
+                                <span>{event.location}</span>
+                                <span>🛣️ 코스</span>
+                                <span>{event.course || '미정'}</span>
+                                <span>📏 거리</span>
+                                <span>{event.distance_km ? `${event.distance_km}km` : '미정'}</span>
+                                <span>☕ 뒷풀이</span>
+                                <span>{event.after_activity || '없음'}</span>
+                                <span>👥 정원</span>
+                                <span>{event.capacity > 0 ? `${event.capacity}명` : '무제한'}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

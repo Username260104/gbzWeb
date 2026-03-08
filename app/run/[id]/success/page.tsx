@@ -4,7 +4,6 @@ import Link from 'next/link';
 interface SuccessPageProps {
     searchParams: {
         name?: string;
-        course?: string;
         pace?: string;
     };
     params: {
@@ -13,7 +12,7 @@ interface SuccessPageProps {
 }
 
 export default function SuccessPage({ searchParams }: SuccessPageProps) {
-    const { name, course, pace } = searchParams;
+    const { name, pace } = searchParams;
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -36,12 +35,6 @@ export default function SuccessPage({ searchParams }: SuccessPageProps) {
                             <div className="flex justify-between">
                                 <dt className="text-gray-500">이름</dt>
                                 <dd className="font-medium text-gray-900">{name}</dd>
-                            </div>
-                        )}
-                        {course && (
-                            <div className="flex justify-between">
-                                <dt className="text-gray-500">신청 코스</dt>
-                                <dd className="font-medium text-gray-900">{course}</dd>
                             </div>
                         )}
                         {pace && (

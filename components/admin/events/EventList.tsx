@@ -9,6 +9,9 @@ type EventData = {
     title: string;
     date: string;
     location: string;
+    course?: string | null;
+    distance_km?: number | null;
+    after_activity?: string | null;
     template_type: string;
     status: string;
     capacity: number;

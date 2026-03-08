@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { EVENT_STATUS, PACE_OPTIONS, DEFAULT_COURSE_OPTIONS } from '@/lib/constants';
+import { EVENT_STATUS, PACE_OPTIONS } from '@/lib/constants';
 import { formatPhoneInput } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +12,7 @@ interface GuestFormProps {
         date: string;
         status: string;
         capacity: number;
+        course?: string | null;
     };
 }
 
@@ -20,7 +21,6 @@ export default function GuestForm({ event }: GuestFormProps) {
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
-        course: '',
         pace: '',
         notes: '',
         consentGiven: false,
@@ -85,7 +85,7 @@ export default function GuestForm({ event }: GuestFormProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isDuplicate) { setError('이미 신청 완료된 전화번호입니다.'); return; }
-        if (!formData.name || !formData.phone || !formData.course || !formData.pace || !formData.consentGiven) {
+        if (!formData.name || !formData.phone || !formData.pace || !formData.consentGiven) {
             setError('필수 항목을 모두 입력해주세요.');
             return;
         }
@@ -99,7 +99,7 @@ export default function GuestForm({ event }: GuestFormProps) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || '신청 처리 중 오류가 발생했습니다.');
-            router.push(`/run/${event.id}/success?name=${encodeURIComponent(formData.name)}&course=${encodeURIComponent(formData.course)}&pace=${encodeURIComponent(formData.pace)}`);
+            router.push(`/run/${event.id}/success?name=${encodeURIComponent(formData.name)}&pace=${encodeURIComponent(formData.pace)}`);
         } catch (err: unknown) {
             if (err instanceof Error) setError(err.message);
             else setError('신청 처리 중 오류가 발생했습니다.');
@@ -194,36 +194,6 @@ export default function GuestForm({ event }: GuestFormProps) {
                             확인 중...
                         </span>
                     )}
-                </div>
-            </div>
-
-            {/* 코스 선택 */}
-            <div>
-                <label style={labelStyle}>
-                    참가 코스 <span style={{ color: 'var(--color-primary)' }}>*</span>
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${DEFAULT_COURSE_OPTIONS.length}, 1fr)`, gap: 'var(--space-2)' }}>
-                    {DEFAULT_COURSE_OPTIONS.map(opt => (
-                        <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, course: opt.value }))}
-                            style={{
-                                padding: '12px 8px',
-                                borderRadius: 'var(--radius-lg)',
-                                border: '1.5px solid',
-                                borderColor: formData.course === opt.value ? 'var(--color-primary)' : 'var(--color-border)',
-                                background: formData.course === opt.value ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                                color: formData.course === opt.value ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                                fontWeight: formData.course === opt.value ? 'var(--font-bold)' : 'var(--font-medium)',
-                                fontSize: 'var(--text-sm)',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                            }}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
                 </div>
             </div>
 

@@ -8,7 +8,7 @@ export default function PrivacyPolicyPage() {
 
                 <div className="prose prose-blue max-w-none text-gray-600">
                     <p className="mb-6">
-                        GBZ 크루(이하 &quot;크루&quot;)는 게스트 참가 신청 서비스(이하 &quot;서비스&quot;)를
+                        GBZ Running Tribe(이하 &quot;GBZ&quot;)는 게스트 참가 신청 서비스(이하 &quot;서비스&quot;)를
                         이용하는 정보주체의 개인정보를 매우 중요하게 생각하며, 안전하게 보호하기 위해 최선을 다하고 있습니다.
                     </p>
 

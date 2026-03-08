@@ -85,7 +85,7 @@ export default async function RunPage({ params }: RunPageProps) {
                         marginBottom: 'var(--space-4)',
                         letterSpacing: '0.05em',
                     }}>
-                        🏃 러닝 게스트 신청
+                        🏃 러닝 신청
                     </div>
 
                     {/* 이벤트 정보 카드 */}
@@ -148,7 +148,7 @@ export default async function RunPage({ params }: RunPageProps) {
                     color: 'var(--color-text-muted)',
                     marginTop: 'var(--space-4)',
                 }}>
-                    GBZ Running Crew
+                    GBZ Running Tribe
                 </p>
             </div>
         </div>

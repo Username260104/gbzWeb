@@ -60,7 +60,7 @@ export default async function Home() {
               </p>
             </div>
             <Link href={`/run/${activeEvent.id}`} className={styles.applyLink}>
-              신청하러 가기
+              신청하기
             </Link>
           </section>
         )}

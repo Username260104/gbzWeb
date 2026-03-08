@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TEMPLATE_TYPE, DEFAULT_CAPACITY, EVENT_STATUS } from '@/lib/constants';
+import { EVENT_STATUS } from '@/lib/constants';
+import { DEFAULT_TEMPLATE_TYPE, EVENT_TEMPLATES, getTemplateByType } from '@/lib/event-templates';
 
 type EventData = {
     id?: string;
@@ -56,8 +57,8 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
         date: initialDate,
         time: initialTime,
         location: initialData?.location || '',
-        template_type: initialData?.template_type || TEMPLATE_TYPE.REGULAR,
-        capacity: initialData?.capacity ?? DEFAULT_CAPACITY[TEMPLATE_TYPE.REGULAR],
+        template_type: initialData?.template_type || DEFAULT_TEMPLATE_TYPE,
+        capacity: initialData?.capacity ?? (getTemplateByType(DEFAULT_TEMPLATE_TYPE)?.defaultCapacity ?? 0),
         course: initialData?.course || '',
         distance_km: initialData?.distance_km?.toString() || '',
         after_activity: initialData?.after_activity || '',
@@ -67,11 +68,9 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
     // 템플릿 변경 시 기본값 자동 세팅
     const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const type = e.target.value;
-        const defaultCapacity = DEFAULT_CAPACITY[type as keyof typeof DEFAULT_CAPACITY] || 0;
-
-        let initialTitle = '';
-        if (type === TEMPLATE_TYPE.REGULAR) initialTitle = '정기런 - ';
-        if (type === TEMPLATE_TYPE.SPEED) initialTitle = '스피드 세션 - ';
+        const selectedTemplate = getTemplateByType(type);
+        const defaultCapacity = selectedTemplate?.defaultCapacity ?? 0;
+        const initialTitle = selectedTemplate?.titlePrefix ?? '';
 
         setFormData((prev) => ({
             ...prev,
@@ -174,10 +173,11 @@ export default function EventForm({ initialData, isEdit = false }: EventFormProp
                         onChange={handleTemplateChange}
                         required
                     >
-                        <option value={TEMPLATE_TYPE.REGULAR}>🏃 정기런</option>
-                        <option value={TEMPLATE_TYPE.SPEED}>⚡ 스피드 세션</option>
-                        <option value={TEMPLATE_TYPE.COLLAB}>🤝 외부 협업 런</option>
-                        <option value={TEMPLATE_TYPE.RACE}>🏆 레이스 참가</option>
+                        {EVENT_TEMPLATES.map((template) => (
+                            <option key={template.type} value={template.type}>
+                                {template.optionLabel}
+                            </option>
+                        ))}
                     </select>
                 </div>
 

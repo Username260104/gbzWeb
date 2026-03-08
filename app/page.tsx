@@ -29,9 +29,9 @@ export default async function Home() {
     <main className={styles.main}>
       <div className={`${styles.hero} ${ribsans.className}`}>
         <h1 className={styles.title}>
-          <span className={styles.titleAccent}>G B Z</span>
+          <span className={styles.titleAccent}>GBZ</span>
           <br />
-          R u n n i n g T r i b e
+          Running Tribe
         </h1>
 
         {activeEvent && (

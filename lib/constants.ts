@@ -12,22 +12,6 @@ export const EVENT_STATUS = {
     CANCELLED: 'cancelled',
 } as const;
 
-/** 이벤트 템플릿 타입 */
-export const TEMPLATE_TYPE = {
-    REGULAR: 'regular',
-    SPEED: 'speed',
-    COLLAB: 'collab',
-    RACE: 'race',
-} as const;
-
-/** 템플릿별 기본 정원 */
-export const DEFAULT_CAPACITY: Record<string, number> = {
-    [TEMPLATE_TYPE.REGULAR]: 25,
-    [TEMPLATE_TYPE.SPEED]: 15,
-    [TEMPLATE_TYPE.COLLAB]: 20,
-    [TEMPLATE_TYPE.RACE]: 0, // 정원 없음
-};
-
 // ── 신청(등록) 관련 ──
 /** 신청 상태 값 */
 export const REGISTRATION_STATUS = {

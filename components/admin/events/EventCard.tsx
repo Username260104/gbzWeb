@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { formatDateKR } from '@/lib/utils';
-import { EVENT_STATUS, TEMPLATE_TYPE } from '@/lib/constants';
+import { EVENT_STATUS } from '@/lib/constants';
+import { getTemplateByType } from '@/lib/event-templates';
 
 type EventData = {
     id: string;
@@ -30,17 +31,6 @@ export default function EventCard({ event }: { event: EventData }) {
         }
     };
 
-    // 템플릿별 표시
-    const getTemplateLabel = (type: string) => {
-        switch (type) {
-            case TEMPLATE_TYPE.REGULAR: return '정기런';
-            case TEMPLATE_TYPE.SPEED: return '스피드 세션';
-            case TEMPLATE_TYPE.COLLAB: return '외부 협업';
-            case TEMPLATE_TYPE.RACE: return '레이스 참가';
-            default: return '일반 이벤트';
-        }
-    };
-
     return (
         <div className="card card-hover" style={{ padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -48,7 +38,7 @@ export default function EventCard({ event }: { event: EventData }) {
                     <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                         {getStatusBadge(event.status)}
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
-                            {getTemplateLabel(event.template_type)}
+                            {getTemplateByType(event.template_type)?.badgeLabel ?? '일반 이벤트'}
                         </span>
                     </div>
                     <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--font-bold)', color: 'var(--color-text)', marginBottom: 'var(--space-1)' }}>

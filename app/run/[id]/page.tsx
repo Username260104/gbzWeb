@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import GuestForm from '@/components/run/GuestForm';
 import { EVENT_STATUS } from '@/lib/constants';
+import { formatDateKR } from '@/lib/utils';
 
 interface RunPageProps {
     params: {
@@ -13,66 +14,134 @@ interface RunPageProps {
 export default async function RunPage({ params }: RunPageProps) {
     const supabase = await createClient();
 
-    // 이벤트 정보 조회
     const { data: event, error } = await supabase
         .from('events')
         .select('id, title, date, status, capacity')
         .eq('id', params.id)
         .single();
 
-    if (error || !event) {
-        notFound();
-    }
+    if (error || !event) notFound();
 
-    // 마감된 이벤트 처리
-    if (event.status === EVENT_STATUS.CLOSED) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-                <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md text-center">
-                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                        신청 마감 🏃
-                    </h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        <strong>{event.title}</strong> 이벤트는 정원이 마감되었거나 신청 기간이 종료되었습니다.
-                    </p>
-                    <div className="mt-8">
-                        <a href="/" className="text-blue-600 hover:underline">홈으로 돌아가기</a>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // 취소된 이벤트 등 다른 상태 처리
+    // 마감 또는 비공개 상태
     if (event.status !== EVENT_STATUS.OPEN) {
         return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-                <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md text-center">
-                    <h2 className="mt-6 text-2xl font-bold text-gray-900">
-                        신청이 불가능한 이벤트입니다
+            <div style={{
+                minHeight: '100vh',
+                background: 'var(--color-bg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--space-6)',
+            }}>
+                <div style={{
+                    background: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: 'var(--space-12)',
+                    textAlign: 'center',
+                    maxWidth: '400px',
+                    width: '100%',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+                }}>
+                    <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>🏁</div>
+                    <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 'var(--font-bold)', color: 'var(--color-text)', marginBottom: 'var(--space-2)' }}>
+                        {event.status === EVENT_STATUS.CLOSED ? '신청 마감' : '신청 불가'}
                     </h2>
+                    <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)', lineHeight: '1.6' }}>
+                        <strong>{event.title}</strong> 이벤트는<br />
+                        현재 신청을 받고 있지 않습니다.
+                    </p>
                 </div>
             </div>
         );
     }
 
-    // 신청 가능한 이벤트
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md mx-auto relative">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                        러닝 게스트 신청
-                    </h1>
-                    <div className="mt-4 inline-flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 w-full">
-                        <h2 className="text-xl font-bold text-gray-800">{event.title}</h2>
-                        <p className="text-sm text-gray-500 mt-2">일시: {new Date(event.date).toLocaleString('ko-KR')}</p>
+        <div style={{
+            minHeight: '100vh',
+            background: 'var(--color-bg)',
+            padding: 'var(--space-6) var(--space-4)',
+        }}>
+            <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+
+                {/* 헤더 */}
+                <div style={{ marginBottom: 'var(--space-6)', textAlign: 'center' }}>
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-2)',
+                        background: 'var(--color-primary-light)',
+                        color: 'var(--color-primary)',
+                        padding: '6px 14px',
+                        borderRadius: '100px',
+                        fontSize: 'var(--text-xs)',
+                        fontWeight: 'var(--font-semibold)',
+                        marginBottom: 'var(--space-4)',
+                        letterSpacing: '0.05em',
+                    }}>
+                        🏃 러닝 게스트 신청
+                    </div>
+
+                    {/* 이벤트 정보 카드 */}
+                    <div style={{
+                        background: 'var(--color-secondary)',
+                        borderRadius: 'var(--radius-xl)',
+                        padding: 'var(--space-6)',
+                        color: 'var(--color-text-inverse)',
+                        marginBottom: 'var(--space-2)',
+                    }}>
+                        <h1 style={{
+                            fontSize: 'var(--text-2xl)',
+                            fontWeight: 'var(--font-bold)',
+                            marginBottom: 'var(--space-2)',
+                            lineHeight: '1.3',
+                        }}>
+                            {event.title}
+                        </h1>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--space-2)',
+                            fontSize: 'var(--text-sm)',
+                            color: 'rgba(255,255,255,0.7)',
+                        }}>
+                            <span>🗓️</span>
+                            <span>{formatDateKR(event.date)}</span>
+                        </div>
+                        {event.capacity > 0 && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 'var(--space-2)',
+                                fontSize: 'var(--text-sm)',
+                                color: 'rgba(255,255,255,0.7)',
+                                marginTop: 'var(--space-1)',
+                            }}>
+                                <span>👥</span>
+                                <span>정원 {event.capacity}명</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100 mb-8 z-10 relative">
+                {/* 폼 카드 */}
+                <div style={{
+                    background: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: 'var(--space-6)',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+                    border: '1px solid var(--color-border-light)',
+                }}>
                     <GuestForm event={event} />
                 </div>
+
+                <p style={{
+                    textAlign: 'center',
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--color-text-muted)',
+                    marginTop: 'var(--space-4)',
+                }}>
+                    GBZ Running Crew
+                </p>
             </div>
         </div>
     );

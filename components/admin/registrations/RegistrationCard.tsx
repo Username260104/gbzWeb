@@ -13,7 +13,7 @@ export type RegistrationData = {
     pace: string;
     status: string;
     created_at: string;
-    guests: Guest[];
+    guests: Guest[] | Guest;
 };
 
 interface RegistrationCardProps {
@@ -24,7 +24,7 @@ interface RegistrationCardProps {
 
 export default function RegistrationCard({ registration, onStatusChange, isUpdating }: RegistrationCardProps) {
     const { guests, course, pace, status, created_at } = registration;
-    const guest = guests[0]; // Supabase 1:N 조인 결과(배열)에서 첫 번째 객체 사용
+    const guest = Array.isArray(guests) ? guests[0] : guests;
 
     // 상태 배지 컴포넌트
     const StatusBadge = () => {

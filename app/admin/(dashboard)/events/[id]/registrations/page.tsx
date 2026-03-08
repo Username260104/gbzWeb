@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { formatDateKR } from '@/lib/utils';
 import RegistrationList from '@/components/admin/registrations/RegistrationList';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ export default async function EventRegistrationsPage({
 }: {
     params: { id: string };
 }) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const eventId = params.id;
 
     // 1. 이벤트 기본 정보 조회
@@ -62,6 +62,8 @@ export default async function EventRegistrationsPage({
 
     // 확정자 수 계산
     const confirmedCount = registrations?.filter(r => r.status === 'confirmed').length || 0;
+
+    console.log(JSON.stringify(registrations, null, 2));
 
     return (
         <div style={{ maxWidth: 'var(--max-width-xl)', margin: '0 auto', width: '100%' }}>

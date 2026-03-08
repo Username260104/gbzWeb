@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from './page.module.css';
 
 /**
@@ -16,6 +17,12 @@ export default function Home() {
         <p className={styles.subtitle}>
           함께 달리는 즐거움, GBZ와 함께하세요
         </p>
+
+        <footer className={styles.footer}>
+          <Link href="/admin/login" className={styles.adminLink}>
+            관리자 로그인
+          </Link>
+        </footer>
       </div>
     </main>
   );

@@ -12,8 +12,6 @@ interface GuestFormProps {
         date: string;
         status: string;
         capacity: number;
-        // In a real app we might have specific courses per event, 
-        // using DEFAULT_COURSE_OPTIONS for now as per SPEC
     };
 }
 
@@ -33,58 +31,52 @@ export default function GuestForm({ event }: GuestFormProps) {
     const [duplicateChecking, setDuplicateChecking] = useState(false);
     const [isDuplicate, setIsDuplicate] = useState(false);
 
-    // 이벤트가 접수 중이 아니면 폼 자체를 가림 (보안/UX)
     if (event.status !== EVENT_STATUS.OPEN) {
         return (
-            <div className="card text-center p-8">
-                <h3 className="text-xl font-bold mb-2">신청이 마감되었습니다</h3>
-                <p className="text-gray-500">현재 이 이벤트는 신청을 받고 있지 않습니다.</p>
+            <div style={{
+                padding: 'var(--space-12)',
+                textAlign: 'center',
+                background: 'var(--color-surface)',
+                borderRadius: 'var(--radius-xl)',
+            }}>
+                <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>🏁</div>
+                <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 'var(--font-bold)', color: 'var(--color-text)', marginBottom: 'var(--space-2)' }}>
+                    신청이 마감되었습니다
+                </h3>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                    현재 이 이벤트는 신청을 받고 있지 않습니다.
+                </p>
             </div>
         );
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
-
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             setFormData(prev => ({ ...prev, [name]: checked }));
             return;
         }
-
         if (name === 'phone') {
-            // 전화번호 입력 시 자동 하이픈 추가
-            const formatted = formatPhoneInput(value);
-            setFormData(prev => ({ ...prev, [name]: formatted }));
-            // 번호가 수정되면 중복 상태 초기화
+            setFormData(prev => ({ ...prev, [name]: formatPhoneInput(value) }));
             setIsDuplicate(false);
             return;
         }
-
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handlePhoneBlur = async () => {
-        // 전화번호 형식이 대략 완성되었을 때만 검사 (010-XXXX-XXXX)
         if (formData.phone.length < 12) return;
-
         setDuplicateChecking(true);
         setError('');
-
         try {
             const res = await fetch(`/api/registrations/check?eventId=${event.id}&phone=${encodeURIComponent(formData.phone)}`);
             if (!res.ok) throw new Error('중복 확인 실패');
-
             const data = await res.json();
             setIsDuplicate(data.exists);
-
-            if (data.exists) {
-                setError('이미 신청 완료된 전화번호입니다.');
-            }
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            if (data.exists) setError('이미 신청 완료된 전화번호입니다.');
         } catch (err) {
             console.error('Phone check error', err);
-            // 에러가 나도 진행을 막지는 않음 (서버 제출 시에도 검사하므로)
         } finally {
             setDuplicateChecking(false);
         }
@@ -92,186 +84,247 @@ export default function GuestForm({ event }: GuestFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (isDuplicate) {
-            setError('이미 신청 완료된 전화번호입니다.');
-            return;
-        }
-
+        if (isDuplicate) { setError('이미 신청 완료된 전화번호입니다.'); return; }
         if (!formData.name || !formData.phone || !formData.course || !formData.pace || !formData.consentGiven) {
             setError('필수 항목을 모두 입력해주세요.');
             return;
         }
-
         setIsSubmitting(true);
         setError('');
-
         try {
             const res = await fetch('/api/registrations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventId: event.id,
-                    ...formData
-                })
+                body: JSON.stringify({ eventId: event.id, ...formData })
             });
-
             const data = await res.json();
-
-            if (!res.ok) {
-                // 고유 제약 조건 위반 (중복) 또는 정원 초과 등 에러 처리
-                throw new Error(data.error || '신청 처리 중 오류가 발생했습니다.');
-            }
-
-            // 성공 시 완료 페이지로 이동
+            if (!res.ok) throw new Error(data.error || '신청 처리 중 오류가 발생했습니다.');
             router.push(`/run/${event.id}/success?name=${encodeURIComponent(formData.name)}&course=${encodeURIComponent(formData.course)}&pace=${encodeURIComponent(formData.pace)}`);
-
         } catch (err: unknown) {
-            console.error(err);
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('신청 처리 중 오류가 발생했습니다.');
-            }
+            if (err instanceof Error) setError(err.message);
+            else setError('신청 처리 중 오류가 발생했습니다.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const labelStyle: React.CSSProperties = {
+        display: 'block',
+        fontSize: 'var(--text-sm)',
+        fontWeight: 'var(--font-semibold)',
+        color: 'var(--color-text)',
+        marginBottom: 'var(--space-2)',
+    };
+
+    const inputStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '14px 16px',
+        fontSize: 'var(--text-base)',
+        border: '1.5px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        boxSizing: 'border-box',
+    };
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+
+            {/* 에러 메시지 */}
             {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-md text-sm">
-                    {error}
+                <div style={{
+                    padding: '12px 16px',
+                    background: '#FEF2F2',
+                    border: '1px solid #FECACA',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'var(--color-error)',
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 'var(--font-medium)',
+                }}>
+                    ⚠️ {error}
                 </div>
             )}
 
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        이름 <span className="text-red-500">*</span>
-                    </label>
+            {/* 이름 */}
+            <div>
+                <label style={labelStyle}>
+                    이름 <span style={{ color: 'var(--color-primary)' }}>*</span>
+                </label>
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    style={inputStyle}
+                    placeholder="홍길동"
+                    value={formData.name}
+                    onChange={handleChange}
+                />
+            </div>
+
+            {/* 전화번호 */}
+            <div>
+                <label style={labelStyle}>
+                    전화번호 <span style={{ color: 'var(--color-primary)' }}>*</span>
+                </label>
+                <div style={{ position: 'relative' }}>
                     <input
-                        type="text"
-                        id="name"
-                        name="name"
+                        type="tel"
+                        name="phone"
                         required
-                        className="input w-full"
-                        placeholder="홍길동"
-                        value={formData.name}
+                        style={{
+                            ...inputStyle,
+                            borderColor: isDuplicate ? 'var(--color-error)' : 'var(--color-border)',
+                        }}
+                        placeholder="010-0000-0000"
+                        value={formData.phone}
                         onChange={handleChange}
+                        onBlur={handlePhoneBlur}
                     />
+                    {duplicateChecking && (
+                        <span style={{
+                            position: 'absolute',
+                            right: '14px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--color-text-muted)',
+                        }}>
+                            확인 중...
+                        </span>
+                    )}
                 </div>
+            </div>
 
-                <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        전화번호 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                        <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            required
-                            className={`input w-full ${isDuplicate ? 'border-red-500 focus:ring-red-500' : ''}`}
-                            placeholder="010-0000-0000"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            onBlur={handlePhoneBlur}
-                        />
-                        {duplicateChecking && (
-                            <span className="absolute right-3 top-2.5 text-xs text-gray-400">
-                                확인 중...
-                            </span>
-                        )}
-                    </div>
+            {/* 코스 선택 */}
+            <div>
+                <label style={labelStyle}>
+                    참가 코스 <span style={{ color: 'var(--color-primary)' }}>*</span>
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${DEFAULT_COURSE_OPTIONS.length}, 1fr)`, gap: 'var(--space-2)' }}>
+                    {DEFAULT_COURSE_OPTIONS.map(opt => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, course: opt.value }))}
+                            style={{
+                                padding: '12px 8px',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1.5px solid',
+                                borderColor: formData.course === opt.value ? 'var(--color-primary)' : 'var(--color-border)',
+                                background: formData.course === opt.value ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                                color: formData.course === opt.value ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                                fontWeight: formData.course === opt.value ? 'var(--font-bold)' : 'var(--font-medium)',
+                                fontSize: 'var(--text-sm)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                            }}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
                 </div>
+            </div>
 
-                <div>
-                    <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-1">
-                        참가 코스 <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        id="course"
-                        name="course"
-                        required
-                        className="input w-full"
-                        value={formData.course}
-                        onChange={handleChange}
-                    >
-                        <option value="" disabled>코스를 선택해주세요</option>
-                        {DEFAULT_COURSE_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+            {/* 페이스 선택 */}
+            <div>
+                <label style={labelStyle}>
+                    평균 페이스 <span style={{ color: 'var(--color-primary)' }}>*</span>
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
+                    {PACE_OPTIONS.map(opt => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, pace: opt.value }))}
+                            style={{
+                                padding: '12px 8px',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1.5px solid',
+                                borderColor: formData.pace === opt.value ? 'var(--color-primary)' : 'var(--color-border)',
+                                background: formData.pace === opt.value ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                                color: formData.pace === opt.value ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                                fontWeight: formData.pace === opt.value ? 'var(--font-bold)' : 'var(--font-medium)',
+                                fontSize: 'var(--text-sm)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
                 </div>
+            </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        평균 페이스 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {PACE_OPTIONS.map(opt => (
-                            <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => setFormData(prev => ({ ...prev, pace: opt.value }))}
-                                className={`py-2 px-3 text-sm rounded-md border transition-colors ${formData.pace === opt.value
-                                    ? 'bg-black text-white border-black'
-                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                    }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+            {/* 특이사항 */}
+            <div>
+                <label style={labelStyle}>
+                    특이사항 <span style={{ color: 'var(--color-text-muted)', fontWeight: 'var(--font-normal)' }}>(선택)</span>
+                </label>
+                <textarea
+                    name="notes"
+                    rows={3}
+                    style={{ ...inputStyle, resize: 'none', lineHeight: '1.6' }}
+                    placeholder="부상 기록, 질문 등 자유롭게 작성해주세요"
+                    value={formData.notes}
+                    onChange={handleChange}
+                />
+            </div>
 
-                <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                        특이사항 (선택)
-                    </label>
-                    <textarea
-                        id="notes"
-                        name="notes"
-                        rows={3}
-                        className="input w-full resize-none"
-                        placeholder="부상 기록, 질문 등"
-                        value={formData.notes}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-md">
-                    <label className="flex items-start gap-3 cursor-pointer">
+            {/* 개인정보 동의 */}
+            <div style={{
+                padding: '16px',
+                background: 'var(--color-bg)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--color-border-light)',
+            }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                    <div style={{ position: 'relative', marginTop: '2px', flexShrink: 0 }}>
                         <input
                             type="checkbox"
                             name="consentGiven"
                             required
                             checked={formData.consentGiven}
                             onChange={handleChange}
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                         />
-                        <span className="text-sm text-gray-600 leading-tight">
-                            개인정보 수집 및 이용에 동의합니다.{' '}
-                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
-                                자세히 보기
-                            </a>
-                            <span className="text-red-500 ml-1">*</span>
-                        </span>
-                    </label>
-                </div>
+                    </div>
+                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
+                        개인정보 수집 및 이용에 동의합니다.{' '}
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>
+                            자세히 보기
+                        </a>
+                        <span style={{ color: 'var(--color-primary)', marginLeft: '4px' }}>*</span>
+                    </span>
+                </label>
             </div>
 
+            {/* 제출 버튼 */}
             <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit as unknown as React.MouseEventHandler}
                 disabled={isSubmitting || !formData.consentGiven || duplicateChecking || isDuplicate}
-                className="btn-primary w-full py-3 text-lg mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: isSubmitting || !formData.consentGiven || duplicateChecking || isDuplicate
+                        ? 'var(--color-border)'
+                        : 'var(--color-primary)',
+                    color: 'var(--color-text-inverse)',
+                    border: 'none',
+                    borderRadius: 'var(--radius-lg)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 'var(--font-bold)',
+                    cursor: isSubmitting || !formData.consentGiven ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s',
+                    marginTop: 'var(--space-2)',
+                }}
             >
-                {isSubmitting ? '신청 처리 중...' : '참가 신청하기'}
+                {isSubmitting ? '신청 처리 중...' : '참가 신청하기 →'}
             </button>
-        </form>
+        </div>
     );
 }

@@ -1,6 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+function isAdminEmail(email?: string | null) {
+    if (!email) return false;
+    const raw = process.env.ADMIN_EMAIL_ALLOWLIST || '';
+    const allowlist = raw
+        .split(',')
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean);
+
+    if (allowlist.length === 0) return true;
+    return allowlist.includes(email.trim().toLowerCase());
+}
+
 /**
  * Next.js 미들웨어
  * - /admin/* 경로에 대해 Supabase 인증 세션을 검증한다.
@@ -39,7 +51,7 @@ export async function middleware(request: NextRequest) {
 
     // 관리자 로그인 페이지는 비인증 접근 허용
     if (pathname === '/admin/login') {
-        if (user) {
+        if (user && isAdminEmail(user.email)) {
             // 이미 로그인된 사용자는 대시보드로 이동
             const url = request.nextUrl.clone();
             url.pathname = '/admin/events';
@@ -53,6 +65,11 @@ export async function middleware(request: NextRequest) {
         if (!user) {
             const url = request.nextUrl.clone();
             url.pathname = '/admin/login';
+            return NextResponse.redirect(url);
+        }
+        if (!isAdminEmail(user.email)) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/';
             return NextResponse.redirect(url);
         }
     }

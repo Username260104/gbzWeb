@@ -1,8 +1,19 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
-import { REGISTRATION_STATUS, HTTP_STATUS, API_ERROR_MSG, DB_ERROR_CODE } from '@/lib/constants';
+import { EVENT_STATUS, PACE_OPTIONS, REGISTRATION_STATUS, HTTP_STATUS, API_ERROR_MSG, DB_ERROR_CODE } from '@/lib/constants';
 import { normalizePhone } from '@/lib/utils';
 import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+const MAX_NAME_LENGTH = 30;
+const MAX_NOTE_LENGTH = 300;
+const ALLOWED_PACES = new Set(PACE_OPTIONS.map((option) => option.value));
+
+function getClientIp(request: Request) {
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    if (!forwardedFor) return 'unknown';
+    return forwardedFor.split(',')[0]?.trim() || 'unknown';
+}
 
 // POST: 게스트 신청 처리 (guests upsert + registrations insert)
 export async function POST(request: Request) {
@@ -14,11 +25,24 @@ export async function POST(request: Request) {
         if (!eventId || !name || !phone || !pace || !consentGiven) {
             return apiError(API_ERROR_MSG.MISSING_PARAMS, HTTP_STATUS.BAD_REQUEST);
         }
+        if (consentGiven !== true) {
+            return apiError('개인정보 수집 및 이용 동의가 필요합니다.', HTTP_STATUS.BAD_REQUEST);
+        }
 
         // 전화번호 정규화 처리
         const normalizedPhone = normalizePhone(phone);
         if (!normalizedPhone) {
             return apiError('유효하지 않은 전화번호 형식입니다.', HTTP_STATUS.BAD_REQUEST);
+        }
+        const normalizedName = typeof name === 'string' ? name.trim() : '';
+        if (!normalizedName || normalizedName.length > MAX_NAME_LENGTH) {
+            return apiError(`이름은 1~${MAX_NAME_LENGTH}자여야 합니다.`, HTTP_STATUS.BAD_REQUEST);
+        }
+        if (typeof notes === 'string' && notes.length > MAX_NOTE_LENGTH) {
+            return apiError(`특이사항은 ${MAX_NOTE_LENGTH}자 이하여야 합니다.`, HTTP_STATUS.BAD_REQUEST);
+        }
+        if (typeof pace !== 'string' || !ALLOWED_PACES.has(pace)) {
+            return apiError('유효하지 않은 페이스 값입니다.', HTTP_STATUS.BAD_REQUEST);
         }
 
         // 서비스 역할 키를 사용하는 클라이언트로 변경 (RLS 바이패스 또는 권한 획득 목적) 
@@ -27,31 +51,44 @@ export async function POST(request: Request) {
         // SPEC에 익명 사용자의 읽기가 제한된다고 되어 있으므로, 신청 과정은 시스템 권한으로 처리.
         // 이부분은 환경변수 설정과 연계되어야 함을 유의.
         const supabase = createAdminClient();
+        const ip = getClientIp(request);
 
-        // 0. 코스 보정
+        // 스팸/봇 완화용 경량 rate-limit
+        const ipLimit = checkRateLimit(`registration:ip:${ip}`, 20, 60_000);
+        if (!ipLimit.allowed) {
+            return apiError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', HTTP_STATUS.TOO_MANY_REQUESTS);
+        }
+        const phoneLimit = checkRateLimit(`registration:phone:${eventId}:${normalizedPhone}`, 3, 10 * 60_000);
+        if (!phoneLimit.allowed) {
+            return apiError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', HTTP_STATUS.TOO_MANY_REQUESTS);
+        }
+
+        // 0. 이벤트 조회 + 상태 검증 + 코스 보정
         // - 신청 폼에서 코스 입력을 제거했으므로, 이벤트 기본 코스를 우선 사용한다.
         // - 이벤트 코스도 비어있으면 DB NOT NULL 제약을 만족하도록 기본값을 사용한다.
         let resolvedCourse = typeof course === 'string' && course.trim() ? course.trim() : '';
+        const { data: eventData, error: eventError } = await supabase
+            .from('events')
+            .select('status, course')
+            .eq('id', eventId)
+            .single();
+
+        if (eventError || !eventData) {
+            handleApiError(eventError, 'Registration API - Event Fetch');
+            return apiError(API_ERROR_MSG.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+        }
+        if (eventData.status !== EVENT_STATUS.OPEN) {
+            return apiError('현재 신청 가능한 이벤트가 아닙니다.', HTTP_STATUS.BAD_REQUEST);
+        }
         if (!resolvedCourse) {
-            const { data: eventData, error: eventError } = await supabase
-                .from('events')
-                .select('course')
-                .eq('id', eventId)
-                .single();
-
-            if (eventError) {
-                handleApiError(eventError, 'Registration API - Event Course Fetch');
-                return apiError(API_ERROR_MSG.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-            }
-
-            resolvedCourse = eventData?.course?.trim() || '미정';
+            resolvedCourse = eventData.course?.trim() || '미정';
         }
 
         // 1. guests 테이블 Upsert (전화번호 기준)
         const { data: guestData, error: guestError } = await supabase
             .from('guests')
             .upsert(
-                { phone: normalizedPhone, name },
+                { phone: normalizedPhone, name: normalizedName },
                 { onConflict: 'phone' } // phone을 기준으로 충돌 시 업데이트되도록
             )
             .select()
@@ -74,7 +111,7 @@ export async function POST(request: Request) {
                 pace,
                 note: typeof notes === 'string' && notes.trim() ? notes.trim() : null,
                 status: REGISTRATION_STATUS.PENDING, // 기본 상태
-                consent_given: consentGiven,
+                consent_given: consentGiven === true,
             });
 
         if (regError) {

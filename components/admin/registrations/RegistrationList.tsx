@@ -15,12 +15,22 @@ export default function RegistrationList({ eventId, initialRegistrations }: Regi
     const [isExporting, setIsExporting] = useState(false);
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [isSmsPanelOpen, setIsSmsPanelOpen] = useState(false);
+    const [smsFilter, setSmsFilter] = useState<'all' | 'confirmed' | 'pending'>('all');
+    const [smsMessage, setSmsMessage] = useState('');
+    const [isSendingSms, setIsSendingSms] = useState(false);
+    const [smsResultMsg, setSmsResultMsg] = useState<string | null>(null);
 
     // 필터링된 목록
     const filteredRegistrations = registrations.filter(reg => {
         if (filter === 'all') return true;
         return reg.status === filter;
     });
+
+    const smsTargetCount = registrations.filter((reg) => {
+        if (smsFilter === 'all') return true;
+        return reg.status === smsFilter;
+    }).length;
 
     // 참가자 상태 변경 핸들러
     const handleStatusChange = async (registrationId: string, newStatus: string) => {
@@ -61,6 +71,43 @@ export default function RegistrationList({ eventId, initialRegistrations }: Regi
                 newSet.delete(registrationId);
                 return newSet;
             });
+        }
+    };
+
+    // 선택 대상 일괄 문자 발송
+    const handleSendBulkSms = async () => {
+        const trimmedMessage = smsMessage.trim();
+        if (!trimmedMessage) {
+            setErrorMsg('문자 내용을 입력해주세요.');
+            return;
+        }
+
+        setIsSendingSms(true);
+        setErrorMsg(null);
+        setSmsResultMsg(null);
+
+        try {
+            const res = await fetch('/api/registrations/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId,
+                    filter: smsFilter,
+                    message: trimmedMessage,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || '문자 발송 중 오류가 발생했습니다.');
+            }
+
+            setSmsResultMsg(`발송 완료: ${data.sentCount}건${data.failedCount ? ` / 실패: ${data.failedCount}건` : ''}`);
+        } catch (error: unknown) {
+            if (error instanceof Error) setErrorMsg(error.message);
+            else setErrorMsg('문자 발송 중 예기치 않은 오류가 발생했습니다.');
+        } finally {
+            setIsSendingSms(false);
         }
     };
 
@@ -131,6 +178,68 @@ export default function RegistrationList({ eventId, initialRegistrations }: Regi
                 >
                     {isExporting ? '다운로드 중...' : '📥 참가자 명단 CSV 내보내기'}
                 </button>
+            </div>
+
+            <div className="card" style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                    <div style={{ fontWeight: 'var(--font-semibold)' }}>단체 문자</div>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setIsSmsPanelOpen(prev => !prev)}
+                    >
+                        {isSmsPanelOpen ? '문자 패널 닫기' : '문자 보내기'}
+                    </button>
+                </div>
+
+                {isSmsPanelOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                        <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <label htmlFor="sms-filter" style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>대상 필터</label>
+                            <select
+                                id="sms-filter"
+                                className="input"
+                                value={smsFilter}
+                                onChange={(e) => setSmsFilter(e.target.value as 'all' | 'confirmed' | 'pending')}
+                                style={{ maxWidth: 220 }}
+                            >
+                                <option value="all">전체</option>
+                                <option value="confirmed">확정자만</option>
+                                <option value="pending">대기자만</option>
+                            </select>
+                            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                                발송 대상: {smsTargetCount}명
+                            </span>
+                        </div>
+
+                        <textarea
+                            className="input"
+                            rows={4}
+                            value={smsMessage}
+                            onChange={(e) => setSmsMessage(e.target.value)}
+                            placeholder="문자 내용을 입력하세요. 예: [GBZ] {이름}님, 안내드립니다."
+                            maxLength={90}
+                        />
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)' }}>
+                            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                                {smsMessage.length}/90자, {'{이름}'} 치환 지원
+                            </span>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={handleSendBulkSms}
+                                disabled={isSendingSms || smsTargetCount === 0}
+                            >
+                                {isSendingSms ? '문자 발송 중...' : '선택 대상 문자 발송'}
+                            </button>
+                        </div>
+
+                        {smsResultMsg && (
+                            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-success)' }}>
+                                {smsResultMsg}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* 에러 메시지 노출 */}

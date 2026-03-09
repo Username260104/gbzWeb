@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import styles from './layout.module.css';
+import { isAdminUser } from '@/lib/admin-auth';
 
 /**
  * 관리자 영역 공통 레이아웃
@@ -18,6 +19,9 @@ export default async function AdminLayout({
 
     if (!user) {
         redirect('/admin/login');
+    }
+    if (!isAdminUser(user)) {
+        redirect('/');
     }
 
     return (

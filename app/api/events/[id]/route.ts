@@ -2,6 +2,81 @@
 import { createClient } from '@/lib/supabase/server';
 import { HTTP_STATUS, API_ERROR_MSG, DB_ERROR_CODE } from '@/lib/constants';
 import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
+import { requireAdminUser } from '@/lib/admin-auth';
+
+const EVENT_UPDATE_FIELDS = [
+    'title',
+    'date',
+    'location',
+    'template_type',
+    'capacity',
+    'course',
+    'distance_km',
+    'after_activity',
+    'status',
+] as const;
+
+type EventUpdateField = (typeof EVENT_UPDATE_FIELDS)[number];
+
+function buildEventUpdatePayload(body: Record<string, unknown>) {
+    const payload: Partial<Record<EventUpdateField, unknown>> = {};
+
+    for (const field of EVENT_UPDATE_FIELDS) {
+        if (body[field] !== undefined) {
+            payload[field] = body[field];
+        }
+    }
+
+    if (payload.capacity !== undefined) {
+        const capacity = Number(payload.capacity);
+        if (!Number.isFinite(capacity) || capacity < 0) {
+            return { error: apiError('capacity는 0 이상의 숫자여야 합니다.', HTTP_STATUS.BAD_REQUEST) };
+        }
+        payload.capacity = capacity;
+    }
+
+    if (payload.distance_km !== undefined) {
+        if (payload.distance_km === null || payload.distance_km === '') {
+            payload.distance_km = null;
+        } else {
+            const distance = Number(payload.distance_km);
+            if (!Number.isFinite(distance) || distance < 0) {
+                return { error: apiError('distance_km은 0 이상의 숫자여야 합니다.', HTTP_STATUS.BAD_REQUEST) };
+            }
+            payload.distance_km = distance;
+        }
+    }
+
+    if (Object.keys(payload).length === 0) {
+        return { error: apiError('업데이트할 필드가 없습니다.', HTTP_STATUS.BAD_REQUEST) };
+    }
+
+    return { payload };
+}
+
+async function requireAdminSession() {
+    const supabase = await createClient();
+    const {
+        data: { session },
+        error: authError,
+    } = await supabase.auth.getSession();
+
+    if (authError || !session) {
+        return {
+            supabase: null,
+            error: apiError(API_ERROR_MSG.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED),
+        };
+    }
+    const adminError = requireAdminUser(session.user);
+    if (adminError) {
+        return {
+            supabase: null,
+            error: adminError,
+        };
+    }
+
+    return { supabase, error: null };
+}
 
 /**
  * GET /api/events/[id]
@@ -10,10 +85,10 @@ import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
  * - 일반/익명 사용자는 `status != draft` 이벤트만 볼 수 있음 (RLS 통해 걸러짐)
  */
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> } // Next.js 14+ params is typically a Promise in App Router dynamic params
+    _request: Request,
+    { params }: { params: { id: string } }
 ) {
-    const { id } = await params;
+    const { id } = params;
     const supabase = await createClient();
 
     const { data: event, error } = await supabase
@@ -40,28 +115,30 @@ export async function GET(
  */
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
-    const { id } = await params;
-    const supabase = await createClient();
-
-    // 관리자 여부 확인 (세션 체크)
-    const {
-        data: { session },
-        error: authError,
-    } = await supabase.auth.getSession();
-
-    if (authError || !session) {
+    const { id } = params;
+    const adminResult = await requireAdminSession();
+    if (adminResult.error) {
+        return adminResult.error;
+    }
+    const { supabase } = adminResult;
+    if (!supabase) {
         return apiError(API_ERROR_MSG.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 
     try {
-        const body = await request.json();
+        const body = await request.json() as Record<string, unknown>;
+        const updateBuildResult = buildEventUpdatePayload(body);
+        if (updateBuildResult.error) {
+            return updateBuildResult.error;
+        }
+        const { payload } = updateBuildResult;
 
         // 업데이트 쿼리
         const { data: updatedEvent, error: updateError } = await supabase
             .from('events')
-            .update(body) // 필요한 필드만 포함된 body
+            .update(payload)
             .eq('id', id)
             .select()
             .single();
@@ -83,19 +160,16 @@ export async function PATCH(
  * - 관리자 전용
  */
 export async function DELETE(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    _request: Request,
+    { params }: { params: { id: string } }
 ) {
-    const { id } = await params;
-    const supabase = await createClient();
-
-    // 관리자 여부 확인
-    const {
-        data: { session },
-        error: authError,
-    } = await supabase.auth.getSession();
-
-    if (authError || !session) {
+    const { id } = params;
+    const adminResult = await requireAdminSession();
+    if (adminResult.error) {
+        return adminResult.error;
+    }
+    const { supabase } = adminResult;
+    if (!supabase) {
         return apiError(API_ERROR_MSG.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
 

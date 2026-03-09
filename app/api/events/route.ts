@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { EVENT_STATUS, HTTP_STATUS, API_ERROR_MSG } from '@/lib/constants';
 import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
+import { requireAdminUser } from '@/lib/admin-auth';
 
 /**
  * GET /api/events
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
     if (authError || !session) {
         return apiError(API_ERROR_MSG.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
+    const adminError = requireAdminUser(session.user);
+    if (adminError) return adminError;
 
     try {
         const body = await request.json();

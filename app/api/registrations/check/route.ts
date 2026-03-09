@@ -3,11 +3,13 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { HTTP_STATUS, API_ERROR_MSG, DB_ERROR_CODE } from '@/lib/constants';
 import { normalizePhone } from '@/lib/utils';
 import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('eventId');
     const phone = searchParams.get('phone');
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
     if (!eventId || !phone) {
         return apiError(API_ERROR_MSG.MISSING_PARAMS, HTTP_STATUS.BAD_REQUEST);
@@ -17,6 +19,10 @@ export async function GET(request: Request) {
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
         return apiError('유효하지 않은 전화번호 형식입니다.', HTTP_STATUS.BAD_REQUEST);
+    }
+    const ipLimit = checkRateLimit(`registration-check:ip:${ip}`, 60, 60_000);
+    if (!ipLimit.allowed) {
+        return apiError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', HTTP_STATUS.TOO_MANY_REQUESTS);
     }
 
     try {

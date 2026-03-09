@@ -130,7 +130,7 @@ export default function GuestForm({ event }: GuestFormProps) {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
 
             {/* 에러 메시지 */}
             {error && (
@@ -274,8 +274,7 @@ export default function GuestForm({ event }: GuestFormProps) {
 
             {/* 제출 버튼 */}
             <button
-                type="button"
-                onClick={handleSubmit as unknown as React.MouseEventHandler}
+                type="submit"
                 disabled={isSubmitting || !formData.consentGiven || duplicateChecking || isDuplicate}
                 style={{
                     width: '100%',
@@ -295,6 +294,6 @@ export default function GuestForm({ event }: GuestFormProps) {
             >
                 {isSubmitting ? '신청 처리 중...' : '참가 신청하기 →'}
             </button>
-        </div>
+        </form>
     );
 }

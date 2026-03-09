@@ -3,10 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 import { formatDateKR } from '@/lib/utils';
 import { HTTP_STATUS, API_ERROR_MSG, REGISTRATION_STATUS } from '@/lib/constants';
 import { handleApiError } from '@/lib/api-error';
+import { requireAdminUser } from '@/lib/admin-auth';
+
+function sanitizeCsvCell(value: unknown) {
+    const raw = String(value ?? '').replace(/\r?\n/g, ' ').trim();
+    const formulaNeutralized = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+    return `"${formulaNeutralized.replace(/"/g, '""')}"`;
+}
 
 // GET: 특정 이벤트의 전체 참가자 명단을 CSV 형태로 반환
 export async function GET(
-    request: Request,
+    _request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
@@ -31,9 +38,8 @@ export async function GET(
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) {
-            return new NextResponse(API_ERROR_MSG.UNAUTHORIZED, { status: HTTP_STATUS.UNAUTHORIZED });
-        }
+        const adminError = requireAdminUser(user);
+        if (adminError) return adminError;
 
         // 1. 이벤트 기본 정보 조회 (파일명 생성용)
         const { data: event, error: eventError } = await supabase
@@ -84,12 +90,10 @@ export async function GET(
                 const course = String(reg.course || '');
                 const pace = String(reg.pace || '');
                 const status = getStatusLabel(String(reg.status || ''));
-                const createdAt = reg.created_at ? `"${formatDateKR(String(reg.created_at))}"` : '';
+                const createdAt = reg.created_at ? sanitizeCsvCell(formatDateKR(String(reg.created_at))) : '""';
                 const visitCount = guest?.visit_count ?? 0;
 
-                // 엑셀에서 전화번호가 수식으로 인식되거나 0이 탈락하는 것을 방지하기 위해 ="x" 형태로 처리하는 방법도 있지만
-                // 가장 간단하게 쌍따옴표로 감싸서 문자열로 처리
-                csvContent += `"${guestName}","${phone}","${course}","${pace}","${status}",${createdAt},${visitCount}\n`;
+                csvContent += `${sanitizeCsvCell(guestName)},${sanitizeCsvCell(phone)},${sanitizeCsvCell(course)},${sanitizeCsvCell(pace)},${sanitizeCsvCell(status)},${createdAt},${sanitizeCsvCell(visitCount)}\n`;
             });
         }
 

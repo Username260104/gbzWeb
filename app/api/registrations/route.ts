@@ -8,6 +8,11 @@ import { checkRateLimit } from '@/lib/rate-limit';
 const MAX_NAME_LENGTH = 30;
 const MAX_NOTE_LENGTH = 300;
 const ALLOWED_PACES = new Set(PACE_OPTIONS.map((option) => option.value));
+type PaceValue = (typeof PACE_OPTIONS)[number]['value'];
+
+function isAllowedPace(value: unknown): value is PaceValue {
+    return typeof value === 'string' && ALLOWED_PACES.has(value as PaceValue);
+}
 
 function getClientIp(request: Request) {
     const forwardedFor = request.headers.get('x-forwarded-for');
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
         if (typeof notes === 'string' && notes.length > MAX_NOTE_LENGTH) {
             return apiError(`특이사항은 ${MAX_NOTE_LENGTH}자 이하여야 합니다.`, HTTP_STATUS.BAD_REQUEST);
         }
-        if (typeof pace !== 'string' || !ALLOWED_PACES.has(pace)) {
+        if (!isAllowedPace(pace)) {
             return apiError('유효하지 않은 페이스 값입니다.', HTTP_STATUS.BAD_REQUEST);
         }
 

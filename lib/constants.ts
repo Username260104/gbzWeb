@@ -17,6 +17,7 @@ export const EVENT_STATUS = {
 export const REGISTRATION_STATUS = {
     PENDING: 'pending',
     CONFIRMED: 'confirmed',
+    CHECKED_IN: 'checked_in',
     CANCELLED: 'cancelled',
 } as const;
 

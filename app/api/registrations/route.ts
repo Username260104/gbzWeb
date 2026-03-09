@@ -8,7 +8,7 @@ import { apiResponse, apiError, handleApiError } from '@/lib/api-error';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { eventId, name, phone, course, pace, consentGiven } = body;
+        const { eventId, name, phone, course, pace, notes, consentGiven } = body;
 
         // 필수 필드 검사
         if (!eventId || !name || !phone || !pace || !consentGiven) {
@@ -72,10 +72,9 @@ export async function POST(request: Request) {
                 guest_id: guestId,
                 course: resolvedCourse,
                 pace,
+                note: typeof notes === 'string' && notes.trim() ? notes.trim() : null,
                 status: REGISTRATION_STATUS.PENDING, // 기본 상태
                 consent_given: consentGiven,
-                // 특이사항은 DB 스키마에 notes 컬럼이 없으면 저장할 수 없으나, SPEC에 특이사항이 기술되어있음.
-                // init_schema.sql 확인 필요. 만약 없으면 무시.
             });
 
         if (regError) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatDateKR, maskPhone, formatPhoneInput } from '@/lib/utils';
+import { formatDateKR, formatPhoneInput } from '@/lib/utils';
 import GuestHistoryModal from './GuestHistoryModal';
 
 export type GuestData = {
@@ -77,7 +77,7 @@ export default function GuestList({ initialGuests }: GuestListProps) {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-                                <div>📞 {maskPhone(guest.phone)}</div>
+                                <div>📞 {guest.phone}</div>
                                 <div>🏃 누적 {guest.visit_count}회 확정 참가</div>
                                 {guest.last_seen ? (
                                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 'var(--space-1)' }}>

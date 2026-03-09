@@ -1,4 +1,4 @@
-import { formatDateKR, maskPhone } from '@/lib/utils';
+import { formatDateKR } from '@/lib/utils';
 import { REGISTRATION_STATUS } from '@/lib/constants';
 
 type Guest = {
@@ -11,6 +11,8 @@ export type RegistrationData = {
     id: string;
     course: string;
     pace: string;
+    note?: string | null;
+    consent_given?: boolean;
     status: string;
     created_at: string;
     guests: Guest[] | Guest;
@@ -23,7 +25,7 @@ interface RegistrationCardProps {
 }
 
 export default function RegistrationCard({ registration, onStatusChange, isUpdating }: RegistrationCardProps) {
-    const { guests, course, pace, status, created_at } = registration;
+    const { guests, course, pace, note, consent_given, status, created_at } = registration;
     const guest = Array.isArray(guests) ? guests[0] : guests;
 
     // 상태 배지 컴포넌트
@@ -33,6 +35,8 @@ export default function RegistrationCard({ registration, onStatusChange, isUpdat
                 return <span className="badge badge-draft">대기</span>;
             case REGISTRATION_STATUS.CONFIRMED:
                 return <span className="badge badge-open">확정</span>;
+            case REGISTRATION_STATUS.CHECKED_IN:
+                return <span className="badge" style={{ backgroundColor: '#E8F8F1', color: 'var(--color-success)' }}>출석</span>;
             case REGISTRATION_STATUS.CANCELLED:
                 return <span className="badge badge-cancelled">취소됨</span>;
             default:
@@ -57,10 +61,16 @@ export default function RegistrationCard({ registration, onStatusChange, isUpdat
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-                <div>📞 {guest ? maskPhone(guest.phone) : '번호 없음'}</div>
+                <div>📞 {guest ? guest.phone : '번호 없음'}</div>
                 <div>⏱️ {pace}</div>
                 <div>📍 {course}</div>
                 <div>🏃 누적 {guest?.visit_count ?? 0}회</div>
+                <div style={{ gridColumn: 'span 2' }}>
+                    📝 특이사항: {note && note.trim() ? note : '없음'}
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                    🔒 개인정보 동의: {consent_given ? '동의' : '미동의'}
+                </div>
                 <div style={{ gridColumn: 'span 2', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 'var(--space-1)' }}>
                     신청 일시: {formatDateKR(created_at)}
                 </div>
@@ -90,14 +100,45 @@ export default function RegistrationCard({ registration, onStatusChange, isUpdat
                 )}
 
                 {status === REGISTRATION_STATUS.CONFIRMED && (
-                    <button
-                        className="btn btn-secondary btn-sm"
-                        style={{ width: '100%' }}
-                        onClick={() => onStatusChange(registration.id, REGISTRATION_STATUS.CANCELLED)}
-                        disabled={isUpdating}
-                    >
-                        참가 취소 처리
-                    </button>
+                    <>
+                        <button
+                            className="btn btn-primary btn-sm"
+                            style={{ flex: 1 }}
+                            onClick={() => onStatusChange(registration.id, REGISTRATION_STATUS.CHECKED_IN)}
+                            disabled={isUpdating}
+                        >
+                            출석 체크
+                        </button>
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ flex: 1 }}
+                            onClick={() => onStatusChange(registration.id, REGISTRATION_STATUS.CANCELLED)}
+                            disabled={isUpdating}
+                        >
+                            참가 취소 처리
+                        </button>
+                    </>
+                )}
+
+                {status === REGISTRATION_STATUS.CHECKED_IN && (
+                    <>
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ flex: 1 }}
+                            onClick={() => onStatusChange(registration.id, REGISTRATION_STATUS.CONFIRMED)}
+                            disabled={isUpdating}
+                        >
+                            출석 취소(확정)
+                        </button>
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ flex: 1 }}
+                            onClick={() => onStatusChange(registration.id, REGISTRATION_STATUS.CANCELLED)}
+                            disabled={isUpdating}
+                        >
+                            참가 취소 처리
+                        </button>
+                    </>
                 )}
 
                 {status === REGISTRATION_STATUS.CANCELLED && (

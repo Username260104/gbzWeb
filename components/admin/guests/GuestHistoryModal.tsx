@@ -77,7 +77,9 @@ export default function GuestHistoryModal({ guestId, onClose }: GuestHistoryModa
         }
     };
 
-    const confirmedCount = history.filter(item => item.status === REGISTRATION_STATUS.CONFIRMED).length;
+    const attendanceCount = history.filter(
+        (item) => item.status === REGISTRATION_STATUS.CONFIRMED || item.status === REGISTRATION_STATUS.CHECKED_IN
+    ).length;
 
     return (
         <div
@@ -131,8 +133,8 @@ export default function GuestHistoryModal({ guestId, onClose }: GuestHistoryModa
                                 <span style={{ fontWeight: 'var(--font-bold)' }}>{history.length}건</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--color-text-secondary)' }}>확정 참가 건수</span>
-                                <span style={{ fontWeight: 'var(--font-bold)', color: 'var(--color-primary)' }}>{confirmedCount}건</span>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>참가 처리 건수</span>
+                                <span style={{ fontWeight: 'var(--font-bold)', color: 'var(--color-primary)' }}>{attendanceCount}건</span>
                             </div>
                         </div>
 
@@ -154,6 +156,7 @@ export default function GuestHistoryModal({ guestId, onClose }: GuestHistoryModa
                                                 </span>
                                                 <span style={{ fontSize: 'var(--text-sm)' }}>
                                                     {item.status === REGISTRATION_STATUS.CONFIRMED && '✅ 확정'}
+                                                    {item.status === REGISTRATION_STATUS.CHECKED_IN && '🟢 출석'}
                                                     {item.status === REGISTRATION_STATUS.PENDING && '⏳ 대기중'}
                                                     {item.status === REGISTRATION_STATUS.CANCELLED && '❌ 취소됨'}
                                                 </span>

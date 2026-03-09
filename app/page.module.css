@@ -43,7 +43,7 @@
   font-weight: var(--font-bold);
   color: #fff;
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
 }
 
 .titleAccent {

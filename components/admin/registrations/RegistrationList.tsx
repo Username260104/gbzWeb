@@ -111,6 +111,12 @@ export default function RegistrationList({ eventId, initialRegistrations }: Regi
                         확정
                     </button>
                     <button
+                        className={`btn ${filter === REGISTRATION_STATUS.CHECKED_IN ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                        onClick={() => setFilter(REGISTRATION_STATUS.CHECKED_IN)}
+                    >
+                        출석
+                    </button>
+                    <button
                         className={`btn ${filter === REGISTRATION_STATUS.CANCELLED ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                         onClick={() => setFilter(REGISTRATION_STATUS.CANCELLED)}
                     >

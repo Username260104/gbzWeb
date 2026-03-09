@@ -39,6 +39,8 @@ export default async function EventRegistrationsPage({
             id,
             course,
             pace,
+            note,
+            consent_given,
             status,
             created_at,
             guests (
@@ -62,8 +64,9 @@ export default async function EventRegistrationsPage({
     // 총 신청자 수 계산 (상태 무관 전체 건수)
     const totalApplicants = registrations?.length || 0;
 
-    // 확정자 수 계산
+    // 확정/출석 인원 계산
     const confirmedCount = registrations?.filter(r => r.status === 'confirmed').length || 0;
+    const checkedInCount = registrations?.filter(r => r.status === 'checked_in').length || 0;
 
     return (
         <div style={{ maxWidth: 'var(--max-width-xl)', margin: '0 auto', width: '100%' }}>
@@ -98,7 +101,7 @@ export default async function EventRegistrationsPage({
                         <span>
                             정원: {event.capacity === 0 ? '무제한' : `${event.capacity}명`}
                             <span style={{ color: 'var(--color-primary)', marginLeft: '6px', fontWeight: 'var(--font-bold)' }}>
-                                (확정: {confirmedCount}명 / 총 신청: {totalApplicants}명)
+                                (확정: {confirmedCount}명 / 출석: {checkedInCount}명 / 총 신청: {totalApplicants}명)
                             </span>
                         </span>
                     </div>

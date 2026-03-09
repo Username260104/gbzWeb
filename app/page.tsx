@@ -38,8 +38,8 @@ export default async function Home() {
 
   return (
     <main className={styles.main}>
-      <div className={`${styles.hero} ${ribsans.className}`}>
-        <h1 className={styles.title}>
+      <div className={styles.hero}>
+        <h1 className={`${styles.title} ${ribsans.className}`}>
           <span className={styles.titleAccent}>GBZ</span>
           <br />
           Running Tribe
